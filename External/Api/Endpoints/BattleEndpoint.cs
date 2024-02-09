@@ -1,5 +1,4 @@
 using Api.Dtos.Requests;
-using Application.Queries;
 using Application.Services;
 
 namespace Api.Endpoints;
@@ -10,27 +9,28 @@ public static class BattleEndpoint
     {
         var group = app.MapGroup("api/battle");
 
-        group.MapPost("", async (CreateBattleDto request, BattleService battleService) => {
-            var battleId = await battleService.Create(request.Name);
-            return Results.Ok(battleId);
+        group.MapPost("", async (UpsertDto request, BattleService service) => {
+            var result = await service.Create(request.Name);
+            return Results.CreatedAtRoute("GetBattleByID", new { result.Id }, result);
         });
 
-        group.MapPut("", async (Guid id, BattleService battleService) => {
-            await battleService.Update(id);
-            return Results.NoContent();
+        group.MapPut("{id}", async (Guid id,UpsertDto request, BattleService service) => {
+            var result = await service.Update(id, request.Name);
+            return Results.Ok(result);
         });
-        group.MapDelete("", async (Guid id, BattleService battleService) => {
-            await battleService.Delete(id);
+        group.MapDelete("", async (Guid id, BattleService service) => {
+            await service.Delete(id);
             return Results.NoContent();
         });
 
-        group.MapGet("{id}", async (Guid id, BattleService battleService) => {
-            var battle = await battleService.Get(id);
-            return battle is null ? Results.NotFound() : Results.Ok(battle);
-        });
-        group.MapGet("", async (BattleService battleService) => {
-            var battles = await battleService.GetAll();
-            return battles is null ? Results.Problem() : Results.Ok(battles);
+        group.MapGet("{id}", async (Guid id, BattleService service) => {
+            var result = await service.Get(id);
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        }).WithName("GetBattleByID");
+
+        group.MapGet("", async (BattleService service) => {
+            var result = await service.GetAll();
+            return result is null ? Results.Problem() : Results.Ok(result);
         });
     }
 }

@@ -12,41 +12,50 @@ public class HorseService
         _horseRepository = horseRepository;
     }
 
-    public async Task<Guid> Create(string name)
+    public async Task<Horse> Create(string name)
     {
-        var samurai = new Horse{
+        var horse = new Horse{
             Id = Guid.NewGuid(),
             Name = name,
         };
 
-        var createdHorse = await _horseRepository.InsertAsync(samurai);
+        var createdHorse = await _horseRepository.InsertAsync(horse);
         await _horseRepository.CompleteAsync();
 
         if (createdHorse is null){
-            throw new ApplicationException("cannot create samurai");
+            throw new ApplicationException("cannot create horse");
         } 
         
 
-        return createdHorse.Id;
+        return createdHorse;
     }
-    public async Task Update(Guid id){
-        var samurai = await _horseRepository.FindOneAsync(x => x.Id == id);
+    public async Task<Horse> Update(Guid id, string name){
+        var horse = await _horseRepository.FindOneAsync(x => x.Id == id);
 
-        if (samurai is null)
+        if (horse is null)
         {
-            throw new ApplicationException("samurai not found");
+            throw new ApplicationException("horse not found");
         }
+
+        horse.Name = name;
+        horse.UpdatedAt = DateTime.UtcNow;
         
-        await _horseRepository.UpdateAsync(samurai, id);
+        var updatedHorse = await _horseRepository.UpdateAsync(horse, id);
         await _horseRepository.CompleteAsync();
+
+         if (updatedHorse is null){
+            throw new ApplicationException("cannot update horse");
+        } 
+
+        return updatedHorse;
     }
 
     public async Task Delete(Guid id){
-        var samurai = await _horseRepository.FindOneAsync(x => x.Id == id);
+        var horse = await _horseRepository.FindOneAsync(x => x.Id == id);
 
-        if (samurai is null)
+        if (horse is null)
         {
-            throw new ApplicationException("samurai not found");
+            throw new ApplicationException("horse not found");
         }
         
         await _horseRepository.DeleteAsync(id);
@@ -54,24 +63,24 @@ public class HorseService
     }
 
     public async Task<Horse> Get(Guid id){
-        var samurai = await _horseRepository.FindOneAsync(x => x.Id == id);
+        var horse = await _horseRepository.FindOneAsync(x => x.Id == id);
 
-        if (samurai is null)
+        if (horse is null)
         {
-            throw new ApplicationException("samurai not found");
+            throw new ApplicationException("horse not found");
         }
         
-        return samurai;
+        return horse;
     }
 
     public async Task<IEnumerable<Horse>> GetAll(){
-        var samurais = await _horseRepository.GetAllAsync();
+        var horses = await _horseRepository.GetAllAsync();
 
-        if (samurais is null)
+        if (horses is null)
         {
-            throw new ApplicationException("samurais cannot be retrived");
+            throw new ApplicationException("horses cannot be retrived");
         }
         
-        return samurais;
+        return horses;
     }
 }

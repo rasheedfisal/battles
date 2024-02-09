@@ -2,7 +2,7 @@
 
 namespace Api.Dtos.Requests;
 
-public class CreateBattleDto
+public class UpsertDto
 {
     [Required]
     public string Name { get; set; } = string.Empty;

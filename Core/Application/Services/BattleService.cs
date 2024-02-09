@@ -12,7 +12,7 @@ public class BattleService
         _battleRepository = battleRepository;
     }
 
-    public async Task<Guid> Create(string name)
+    public async Task<Battle> Create(string name)
     {
         var battle = new Battle{
             Id = Guid.NewGuid(),
@@ -26,18 +26,27 @@ public class BattleService
             throw new ApplicationException("cannot create battle");
         } 
 
-        return createdBattle.Id;
+        return createdBattle;
     }
-    public async Task Update(Guid id){
+    public async Task<Battle> Update(Guid id, string name){
         var battle = await _battleRepository.FindOneAsync(x => x.Id == id);
 
         if (battle is null)
         {
             throw new ApplicationException("battle not found");
         }
+
+        battle.Name = name;
+        battle.UpdatedAt = DateTime.UtcNow;
         
-        await _battleRepository.UpdateAsync(battle, id);
+        var updatedBattle = await _battleRepository.UpdateAsync(battle, id);
         await _battleRepository.CompleteAsync();
+
+        if (updatedBattle is null){
+            throw new ApplicationException("cannot update battle");
+        } 
+
+        return updatedBattle;
     }
 
     public async Task Delete(Guid id){

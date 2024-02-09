@@ -12,7 +12,7 @@ public class SamuraiService
         _samuraiRepository = samuraiRepository;
     }
 
-    public async Task<Guid> Create(string name)
+    public async Task<Samurai> Create(string name)
     {
         var samurai = new Samurai{
             Id = Guid.NewGuid(),
@@ -27,9 +27,9 @@ public class SamuraiService
         } 
         
 
-        return createdSamurai.Id;
+        return createdSamurai;
     }
-    public async Task Update(Guid id){
+    public async Task<Samurai> Update(Guid id, string name){
         var samurai = await _samuraiRepository.FindOneAsync(x => x.Id == id);
 
         if (samurai is null)
@@ -37,8 +37,17 @@ public class SamuraiService
             throw new ApplicationException("samurai not found");
         }
         
-        await _samuraiRepository.UpdateAsync(samurai, id);
+        samurai.Name = name;
+        samurai.UpdatedAt = DateTime.UtcNow;
+
+        var updatedSamurai = await _samuraiRepository.UpdateAsync(samurai, id);
         await _samuraiRepository.CompleteAsync();
+
+         if (updatedSamurai is null){
+            throw new ApplicationException("cannot update samurai");
+        } 
+
+        return updatedSamurai;
     }
 
     public async Task Delete(Guid id){

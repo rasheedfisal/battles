@@ -58,8 +58,18 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         return enity;
     }
 
-    public Task<T?> UpdateAsync(T entity, Guid Key)
+    public virtual async Task<T?> UpdateAsync(T entity, Guid Key)
     {
-        throw new NotImplementedException();
+        if (entity is null)
+            return null;
+
+        T? existing = await dbset.FindAsync(Key);
+
+        if (existing is not null)
+        {
+            _context.Entry(existing).CurrentValues.SetValues(entity);
+        }
+
+        return entity;
     }
 }

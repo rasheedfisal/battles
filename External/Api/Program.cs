@@ -24,6 +24,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapBattleEndpoints();
+app.MapSamuraiEndpoints();
+app.MapHorseEndpoints();
 
 app.UseHttpsRedirection();
 

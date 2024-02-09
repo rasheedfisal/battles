@@ -45,20 +45,27 @@ public static class MigrationManager
                     new Battle(){Id = Guid.NewGuid(), Name = "battle #02", CreatedAt = DateTime.UtcNow},
                     new Battle(){Id = Guid.NewGuid(), Name = "battle #03", CreatedAt = DateTime.UtcNow}
                 );
+            
+                db.SaveChanges();
+            }
+                    
+            if(!db.Samurais.Any()) {
                 db.Samurais.AddRange(
                     new Samurai(){Id = Guid.NewGuid(), Name = "samurai #01", CreatedAt = DateTime.UtcNow},
                     new Samurai(){Id = Guid.NewGuid(), Name = "samurai #02", CreatedAt = DateTime.UtcNow},
                     new Samurai(){Id = Guid.NewGuid(), Name = "samurai #03", CreatedAt = DateTime.UtcNow}
                 );
+                db.SaveChanges();
+            }
+
+            if(!db.Horses.Any()) {
                 db.Horses.AddRange(
                     new Horse(){Id = Guid.NewGuid(), Name = "horse #01", CreatedAt = DateTime.UtcNow},
                     new Horse(){Id = Guid.NewGuid(), Name = "horse #02", CreatedAt = DateTime.UtcNow},
                     new Horse(){Id = Guid.NewGuid(), Name = "horse #03", CreatedAt = DateTime.UtcNow}
                 );
-            
                 db.SaveChanges();
             }
-                    
         }
     }
 }
