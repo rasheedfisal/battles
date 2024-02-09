@@ -22,8 +22,6 @@ public class GetBattleByIdQueryHandler : IGetBattleByIdQueryHandler
             .Select(battle => new BattleResponse{
                 Id = battle.Id,
                 Name = battle.Name,
-                BattleStartDate = battle.BattleStartDate,
-                BattleEndDate = battle.BattleEndDate
             })
             .FirstOrDefaultAsync();
 

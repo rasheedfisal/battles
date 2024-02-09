@@ -1,9 +1,7 @@
-namespace Domain.Entities;
+using Domain.Entities;
 
-public interface IBattleRepository {
-    Task<Guid> InsertAsync(Battle battle);
+namespace Domain.Repositories;
 
-    Task<Battle?> GetByIdAsync(Guid id);
-
-    Task UpdateAsync(Battle battle);
+public interface IBattleRepository: IGenericRepository<Battle>
+{
 }

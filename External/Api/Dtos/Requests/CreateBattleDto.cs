@@ -1,6 +1,9 @@
-﻿namespace Api.Dtos.Requests;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Api.Dtos.Requests;
 
 public class CreateBattleDto
 {
-    public string Name { get; set; }
+    [Required]
+    public string Name { get; set; } = string.Empty;
 }

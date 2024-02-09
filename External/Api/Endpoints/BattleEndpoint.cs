@@ -8,19 +8,29 @@ public static class BattleEndpoint
 {
     public static void MapBattleEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/battle", async (CreateBattleDto request, BattleService battleService) => {
-            var battleId = await battleService.CreateAsync(request.Name);
+        var group = app.MapGroup("api/battle");
+
+        group.MapPost("", async (CreateBattleDto request, BattleService battleService) => {
+            var battleId = await battleService.Create(request.Name);
             return Results.Ok(battleId);
         });
 
-        app.MapPut("/api/battle", async (Guid id, BattleService battleService) => {
-            await battleService.UpdateAsync(id);
+        group.MapPut("", async (Guid id, BattleService battleService) => {
+            await battleService.Update(id);
+            return Results.NoContent();
+        });
+        group.MapDelete("", async (Guid id, BattleService battleService) => {
+            await battleService.Delete(id);
             return Results.NoContent();
         });
 
-        app.MapGet("/api/battle/{id}", async (Guid id, IGetBattleByIdQueryHandler handler) => {
-            var battle = await handler.Handle(id);
+        group.MapGet("{id}", async (Guid id, BattleService battleService) => {
+            var battle = await battleService.Get(id);
             return battle is null ? Results.NotFound() : Results.Ok(battle);
+        });
+        group.MapGet("", async (BattleService battleService) => {
+            var battles = await battleService.GetAll();
+            return battles is null ? Results.Problem() : Results.Ok(battles);
         });
     }
 }
