@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Core.ValueObjects;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Database;
 namespace Api.Extensions;
@@ -41,9 +42,9 @@ public static class MigrationManager
             {
                 Console.WriteLine("---> seeding data...");
                 db.Battles.AddRange(
-                    new Battle(){Id = Guid.NewGuid(), Name = "battle #01", CreatedAt = DateTime.UtcNow},
-                    new Battle(){Id = Guid.NewGuid(), Name = "battle #02", CreatedAt = DateTime.UtcNow},
-                    new Battle(){Id = Guid.NewGuid(), Name = "battle #03", CreatedAt = DateTime.UtcNow}
+                    Battle.Create(Name.Create("battle #01").Value, DateTime.UtcNow),
+                    Battle.Create(Name.Create("battle #02").Value, DateTime.UtcNow),
+                    Battle.Create(Name.Create("battle #03").Value, DateTime.UtcNow)
                 );
             
                 db.SaveChanges();
@@ -51,18 +52,18 @@ public static class MigrationManager
                     
             if(!db.Samurais.Any()) {
                 db.Samurais.AddRange(
-                    new Samurai(){Id = Guid.NewGuid(), Name = "samurai #01", CreatedAt = DateTime.UtcNow},
-                    new Samurai(){Id = Guid.NewGuid(), Name = "samurai #02", CreatedAt = DateTime.UtcNow},
-                    new Samurai(){Id = Guid.NewGuid(), Name = "samurai #03", CreatedAt = DateTime.UtcNow}
+                    Samurai.Create(Name.Create("samurai #01").Value, DateTime.UtcNow),
+                    Samurai.Create(Name.Create("samurai #02").Value, DateTime.UtcNow),
+                    Samurai.Create(Name.Create("samurai #03").Value, DateTime.UtcNow)
                 );
                 db.SaveChanges();
             }
 
             if(!db.Horses.Any()) {
                 db.Horses.AddRange(
-                    new Horse(){Id = Guid.NewGuid(), Name = "horse #01", CreatedAt = DateTime.UtcNow},
-                    new Horse(){Id = Guid.NewGuid(), Name = "horse #02", CreatedAt = DateTime.UtcNow},
-                    new Horse(){Id = Guid.NewGuid(), Name = "horse #03", CreatedAt = DateTime.UtcNow}
+                    Horse.Create(Name.Create("horse #01").Value, DateTime.UtcNow),
+                    Horse.Create(Name.Create("horse #02").Value, DateTime.UtcNow),
+                    Horse.Create(Name.Create("horse #03").Value, DateTime.UtcNow)
                 );
                 db.SaveChanges();
             }

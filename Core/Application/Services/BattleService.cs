@@ -1,9 +1,12 @@
-﻿using Domain.Entities;
+﻿using Domain.Core.Errors;
+using Domain.Core.Primitives.Result;
+using Domain.Core.ValueObjects;
+using Domain.Entities;
 using Domain.Repositories;
 
 namespace Application.Services;
 
-public class BattleService
+public sealed class BattleService
 {
     private readonly IBattleRepository _battleRepository;
 
@@ -12,74 +15,92 @@ public class BattleService
         _battleRepository = battleRepository;
     }
 
-    public async Task<Battle> Create(string name)
+    public async Task<Result<Battle>> Create(string name, CancellationToken cancellationToken)
     {
-        var battle = new Battle{
-            Id = Guid.NewGuid(),
-            Name = name,
-        };
+        Result<Name> nameResult = Name.Create(name);
+        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(nameResult);
+
+        if (firstFailureOrSuccess.IsFailure)
+        {
+            return Result.Failure<Battle>(firstFailureOrSuccess.Error);
+        }
+        bool isNameUnique = await _battleRepository.AnyAsync(x => x.Name.Value == nameResult.Value, cancellationToken);
+        if (!isNameUnique)
+        {
+            return Result.Failure<Battle>(DomainErrors.Battle.DuplicateName);
+        }
+
+        var battle = Battle.Create(nameResult.Value, DateTime.UtcNow);
 
         var createdBattle = await _battleRepository.InsertAsync(battle);
-        await _battleRepository.CompleteAsync();
+        await _battleRepository.CompleteAsync(cancellationToken);
 
         if (createdBattle is null){
-            throw new ApplicationException("cannot create battle");
+            return Result.Failure<Battle>(DomainErrors.Battle.UnableToAddBattle);
         } 
 
-        return createdBattle;
+        return Result.Success(createdBattle);
     }
-    public async Task<Battle> Update(Guid id, string name){
-        var battle = await _battleRepository.FindOneAsync(x => x.Id == id);
+    public async Task<Result<Battle>> Update(Guid id, string name, CancellationToken cancellationToken)
+    {
+        Result<Name> nameResult = Name.Create(name);
+        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(nameResult);
+
+
+        if (firstFailureOrSuccess.IsFailure)
+        {
+            return Result.Failure<Battle>(firstFailureOrSuccess.Error);
+        }
+
+        var battle = await _battleRepository.FindOneAsync(x => x.Id == id, cancellationToken);
 
         if (battle is null)
         {
-            throw new ApplicationException("battle not found");
+           return Result.Failure<Battle>(DomainErrors.General.NotFound);
         }
 
-        battle.Name = name;
-        battle.UpdatedAt = DateTime.UtcNow;
+        battle.ChangeName(nameResult.Value);
+        battle.ChangeModifiedOnUtc(DateTime.UtcNow);
         
         var updatedBattle = await _battleRepository.UpdateAsync(battle, id);
-        await _battleRepository.CompleteAsync();
+        await _battleRepository.CompleteAsync(cancellationToken);
 
         if (updatedBattle is null){
-            throw new ApplicationException("cannot update battle");
+            return Result.Failure<Battle>(DomainErrors.Battle.UnableToUpdateBattle);
         } 
 
-        return updatedBattle;
+        return Result.Success(updatedBattle);
     }
 
-    public async Task Delete(Guid id){
-        var battle = await _battleRepository.FindOneAsync(x => x.Id == id);
+    public async Task<Result<bool>> Delete(Guid id, CancellationToken cancellationToken){
+        var result = await _battleRepository.DeleteAsync(id);
+        await _battleRepository.CompleteAsync(cancellationToken);
+        if (!result)
+        {
+            return Result.Failure<bool>(DomainErrors.General.UnProcessableRequest);
+        }
+        return Result.Success(true);
+    }
+
+    public async Task<Result<Battle>> Get(Guid id, CancellationToken cancellationToken){
+        var battle = await _battleRepository.FindOneAsync(x => x.Id == id, cancellationToken);
 
         if (battle is null)
         {
-            throw new ApplicationException("battle not found");
+            return Result.Failure<Battle>(DomainErrors.General.NotFound);
         }
         
-        await _battleRepository.DeleteAsync(id);
-        await _battleRepository.CompleteAsync();
+        return Result.Success(battle);
     }
 
-    public async Task<Battle> Get(Guid id){
-        var battle = await _battleRepository.FindOneAsync(x => x.Id == id);
-
-        if (battle is null)
-        {
-            throw new ApplicationException("battle not found");
-        }
-        
-        return battle;
-    }
-
-    public async Task<IEnumerable<Battle>> GetAll(){
-        var battles = await _battleRepository.GetAllAsync();
+    public async Task<Result<IEnumerable<Battle>>> GetAll(CancellationToken cancellationToken){
+        var battles = await _battleRepository.GetAllAsync(cancellationToken);
 
         if (battles is null)
         {
-            throw new ApplicationException("battles cannot be retrived");
+            return Result.Failure<IEnumerable<Battle>>(DomainErrors.General.NotFound);
         }
         
-        return battles;
+        return Result.Success(battles);
     }
 }

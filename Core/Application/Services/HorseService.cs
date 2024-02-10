@@ -1,9 +1,12 @@
-﻿using Domain.Entities;
+﻿using Domain.Core.Errors;
+using Domain.Core.Primitives.Result;
+using Domain.Core.ValueObjects;
+using Domain.Entities;
 using Domain.Repositories;
 
 namespace Application.Services;
 
-public class HorseService
+public sealed class HorseService
 {
     private readonly IHorseRepository _horseRepository;
 
@@ -12,75 +15,95 @@ public class HorseService
         _horseRepository = horseRepository;
     }
 
-    public async Task<Horse> Create(string name)
+    public async Task<Result<Horse>> Create(string name, CancellationToken cancellationToken)
     {
-        var horse = new Horse{
-            Id = Guid.NewGuid(),
-            Name = name,
-        };
+        Result<Name> nameResult = Name.Create(name);
+        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(nameResult);
+
+         if (firstFailureOrSuccess.IsFailure)
+        {
+            return Result.Failure<Horse>(firstFailureOrSuccess.Error);
+        }
+        bool isNameUnique = await _horseRepository.AnyAsync(x => x.Name.Value == nameResult.Value, cancellationToken);
+        if (!isNameUnique)
+        {
+            return Result.Failure<Horse>(DomainErrors.Horse.DuplicateName);
+        }
+         var horse = Horse.Create(nameResult.Value, DateTime.UtcNow);
 
         var createdHorse = await _horseRepository.InsertAsync(horse);
-        await _horseRepository.CompleteAsync();
+        await _horseRepository.CompleteAsync(cancellationToken);
 
         if (createdHorse is null){
-            throw new ApplicationException("cannot create horse");
+             return Result.Failure<Horse>(DomainErrors.Horse.UnableToAddHorse);
         } 
         
 
-        return createdHorse;
+       return Result.Success(createdHorse);
     }
-    public async Task<Horse> Update(Guid id, string name){
-        var horse = await _horseRepository.FindOneAsync(x => x.Id == id);
+    
+    public async Task<Result<Horse>> Update(Guid id, string name, CancellationToken cancellationToken)
+    {
+        Result<Name> nameResult = Name.Create(name);
+        Result firstFailureOrSuccess = Result.FirstFailureOrSuccess(nameResult);
+
+
+        if (firstFailureOrSuccess.IsFailure)
+        {
+            return Result.Failure<Horse>(firstFailureOrSuccess.Error);
+        }
+
+        var horse = await _horseRepository.FindOneAsync(x => x.Id == id, cancellationToken);
 
         if (horse is null)
         {
-            throw new ApplicationException("horse not found");
+            return Result.Failure<Horse>(DomainErrors.General.NotFound);
         }
 
-        horse.Name = name;
-        horse.UpdatedAt = DateTime.UtcNow;
+        horse.ChangeName(nameResult.Value);
+        horse.ChangeModifiedOnUtc(DateTime.UtcNow);
         
         var updatedHorse = await _horseRepository.UpdateAsync(horse, id);
-        await _horseRepository.CompleteAsync();
+        await _horseRepository.CompleteAsync(cancellationToken);
 
          if (updatedHorse is null){
-            throw new ApplicationException("cannot update horse");
+            return Result.Failure<Horse>(DomainErrors.Horse.UnableToUpdateHorse);
         } 
 
-        return updatedHorse;
+         return Result.Success(updatedHorse);
     }
 
-    public async Task Delete(Guid id){
-        var horse = await _horseRepository.FindOneAsync(x => x.Id == id);
+    public async Task<Result<bool>> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _horseRepository.DeleteAsync(id);
+        await _horseRepository.CompleteAsync(cancellationToken);
+
+        if (!result)
+        {
+            return Result.Failure<bool>(DomainErrors.General.UnProcessableRequest);
+        }
+        return Result.Success(true);
+    }
+
+    public async Task<Result<Horse>> Get(Guid id, CancellationToken cancellationToken){
+        var horse = await _horseRepository.FindOneAsync(x => x.Id == id, cancellationToken);
 
         if (horse is null)
         {
-            throw new ApplicationException("horse not found");
+            return Result.Failure<Horse>(DomainErrors.General.NotFound);
         }
         
-        await _horseRepository.DeleteAsync(id);
-        await _horseRepository.CompleteAsync();
+        return Result.Success(horse);
     }
 
-    public async Task<Horse> Get(Guid id){
-        var horse = await _horseRepository.FindOneAsync(x => x.Id == id);
-
-        if (horse is null)
-        {
-            throw new ApplicationException("horse not found");
-        }
-        
-        return horse;
-    }
-
-    public async Task<IEnumerable<Horse>> GetAll(){
-        var horses = await _horseRepository.GetAllAsync();
+    public async Task<Result<IEnumerable<Horse>>> GetAll(CancellationToken cancellationToken){
+        var horses = await _horseRepository.GetAllAsync(cancellationToken);
 
         if (horses is null)
         {
-            throw new ApplicationException("horses cannot be retrived");
+            return Result.Failure<IEnumerable<Horse>>(DomainErrors.General.NotFound);
         }
         
-        return horses;
+        return Result.Success(horses);
     }
 }

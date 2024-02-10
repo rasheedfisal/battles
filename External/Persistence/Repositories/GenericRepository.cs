@@ -16,9 +16,14 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         dbset = context.Set<T>();
     }
 
-    public async Task CompleteAsync()
+    public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> match, CancellationToken cancellationToken = default)
     {
-       await _context.SaveChangesAsync();
+        return await _context.Set<T>().AnyAsync(match, cancellationToken);
+    }
+
+    public async Task CompleteAsync(CancellationToken cancellationToken = default)
+    {
+       await _context.SaveChangesAsync(cancellationToken);
     }
 
     public virtual async Task<bool> DeleteAsync(Guid Key)
@@ -33,29 +38,29 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         return false;
     }
 
-    public virtual async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> match)
+    public virtual async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> match, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<T>().Where(match).AsNoTracking().ToListAsync();
+        return await _context.Set<T>().Where(match).AsNoTracking().ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<T?> FindOneAsync(Expression<Func<T, bool>> match)
+    public virtual async Task<T?> FindOneAsync(Expression<Func<T, bool>> match, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<T>().AsNoTracking().FirstOrDefaultAsync(match);
+        return await _context.Set<T>().AsNoTracking().FirstOrDefaultAsync(match, cancellationToken);
     }
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
+    public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-         return await dbset.AsNoTracking().ToListAsync();
+         return await dbset.AsNoTracking().ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<T?> InsertAsync(T enity)
+    public virtual async Task<T?> InsertAsync(T entity)
     {
-        var result = await dbset.AddAsync(enity);
+        var result = await dbset.AddAsync(entity);
         if (result is null)
         {
             return null;
         }
-        return enity;
+        return entity;
     }
 
     public virtual async Task<T?> UpdateAsync(T entity, Guid Key)

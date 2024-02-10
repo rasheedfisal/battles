@@ -1,4 +1,5 @@
 ﻿
+using Domain.Core.ValueObjects;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,11 +12,17 @@ internal class HorseConfiguration : IEntityTypeConfiguration<Horse>
     {
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Name)
-            .HasMaxLength(200)
-            .IsRequired();
+         builder.OwnsOne(horse => horse.Name, nameBuilder =>
+        {
+            nameBuilder.WithOwner();
 
-        builder.Property(c => c.CreatedAt)
+            nameBuilder.Property(name => name.Value)
+                .HasColumnName(nameof(Horse.Name))
+                .HasMaxLength(Name.MaxLength)
+                .IsRequired();
+        });
+
+        builder.Property(c => c.CreatedOnUtc)
             .IsRequired();
 
         builder.HasIndex(c => c.Name).IsUnique();

@@ -1,4 +1,5 @@
 ﻿
+using Domain.Core.ValueObjects;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,13 +12,21 @@ internal class BattleConfiguration : IEntityTypeConfiguration<Battle>
     {
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Name)
-            .HasMaxLength(200)
-            .IsRequired();
+        builder.OwnsOne(battle => battle.Name, nameBuilder =>
+        {
+            nameBuilder.WithOwner();
 
-        builder.Property(c => c.CreatedAt)
+            nameBuilder.Property(name => name.Value)
+                .HasColumnName(nameof(Battle.Name))
+                .HasMaxLength(Name.MaxLength)
+                .IsRequired();
+        });
+
+        builder.Property(c => c.CreatedOnUtc)
             .IsRequired();
 
         builder.HasIndex(c => c.Name).IsUnique();
+
+        builder.HasQueryFilter(battle => battle.DeletedOnUtc == null);
     }
 }

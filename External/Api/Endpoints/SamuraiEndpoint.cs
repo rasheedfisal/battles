@@ -1,5 +1,7 @@
 using Api.Dtos.Requests;
+using Api.Extensions;
 using Application.Services;
+using Domain.Core.Primitives.Result;
 
 namespace Api.Endpoints;
 
@@ -9,28 +11,50 @@ public static class SamuraiEndpoint
     {
         var group = app.MapGroup("api/samurai");
 
-        group.MapPost("", async (UpsertDto request, SamuraiService service) => {
-            var result = await service.Create(request.Name);
-            return Results.CreatedAtRoute("GetSamuraiByID", new { result.Id }, result);
+        group.MapPost("", async (UpsertDto request, SamuraiService service, CancellationToken cancellationToken) => {
+            var result = await service.Create(request.Name, cancellationToken);
+            if (result.IsFailure)
+            {
+                return result.ToProblemDetails();
+            }
+            return Results.CreatedAtRoute("GetSamuraiByID", new { result.Value.Id }, result.Value);
         });
 
-        group.MapPut("{id}", async (Guid id,UpsertDto request, SamuraiService service) => {
-            var result = await service.Update(id, request.Name);
-            return Results.Ok(result);
+        group.MapPut("{id}", async (Guid id,UpsertDto request, SamuraiService service, CancellationToken cancellationToken) => {
+            var result = await service.Update(id, request.Name, cancellationToken);
+            
+            if (result.IsFailure)
+            {
+                return result.ToProblemDetails();
+            }
+            
+            return Results.Ok(result.Value);
         });
-        group.MapDelete("", async (Guid id, SamuraiService service) => {
-            await service.Delete(id);
+        group.MapDelete("", async (Guid id, SamuraiService service, CancellationToken cancellationToken) => {
+            var result = await service.Delete(id, cancellationToken);
+            if (result.IsFailure)
+            {
+                result.ToProblemDetails();
+            }
             return Results.NoContent();
         });
 
-        group.MapGet("{id}", async (Guid id, SamuraiService service) => {
-            var result = await service.Get(id);
-            return result is null ? Results.NotFound() : Results.Ok(result);
+        group.MapGet("{id}", async (Guid id, SamuraiService service, CancellationToken cancellationToken) => {
+            var result = await service.Get(id, cancellationToken);
+            if (result.IsFailure)
+            {
+                result.ToNotFoundProblemDetails();
+            }
+            return Results.Ok(result.Value);
         }).WithName("GetSamuraiByID");
 
-        group.MapGet("", async (SamuraiService service) => {
-            var result = await service.GetAll();
-            return result is null ? Results.Problem() : Results.Ok(result);
+        group.MapGet("", async (SamuraiService service, CancellationToken cancellationToken) => {
+            var result = await service.GetAll(cancellationToken);
+            if (result.IsFailure)
+            {
+                result.ToProblemDetails();
+            }
+            return Results.Ok(result.Value);
         });
     }
 }
