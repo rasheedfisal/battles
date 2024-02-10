@@ -1,4 +1,5 @@
-﻿using Domain.Core.Errors;
+﻿using Application.Core.Data;
+using Domain.Core.Errors;
 using Domain.Core.Primitives.Result;
 using Domain.Core.ValueObjects;
 using Domain.Entities;
@@ -9,10 +10,12 @@ namespace Application.Services;
 public sealed class SamuraiService
 {
     private readonly ISamuraiRepository _samuraiRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public SamuraiService(ISamuraiRepository samuraiRepository)
+    public SamuraiService(ISamuraiRepository samuraiRepository, IUnitOfWork unitOfWork)
     {
         _samuraiRepository = samuraiRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Samurai>> Create(string name, CancellationToken cancellationToken)
@@ -31,10 +34,10 @@ public sealed class SamuraiService
             return Result.Failure<Samurai>(DomainErrors.Samurai.DuplicateName);
         }
 
-       var samurai = Samurai.Create(nameResult.Value, DateTime.UtcNow);
+       var samurai = Samurai.Create(nameResult.Value);
 
         var createdSamurai = await _samuraiRepository.InsertAsync(samurai);
-        await _samuraiRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (createdSamurai is null){
             return Result.Failure<Samurai>(DomainErrors.Samurai.UnableToAddSamurai);
@@ -62,10 +65,9 @@ public sealed class SamuraiService
         }
         
         samurai.ChangeName(nameResult.Value);
-        samurai.ChangeModifiedOnUtc(DateTime.UtcNow);
 
         var updatedSamurai = await _samuraiRepository.UpdateAsync(samurai, id);
-        await _samuraiRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
          if (updatedSamurai is null){
             return Result.Failure<Samurai>(DomainErrors.Samurai.UnableToUpdateSamurai);
@@ -77,7 +79,7 @@ public sealed class SamuraiService
     public async Task<Result<bool>> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await _samuraiRepository.DeleteAsync(id);
-        await _samuraiRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (!result)
         {

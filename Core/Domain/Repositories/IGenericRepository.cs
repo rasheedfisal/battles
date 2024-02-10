@@ -11,6 +11,5 @@ public interface IGenericRepository<T> where T: class
     Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> match, CancellationToken cancellationToken = default);
     Task<T?> FindOneAsync(Expression<Func<T, bool>> match, CancellationToken cancellationToken = default);
     Task<bool> AnyAsync(Expression<Func<T, bool>> match, CancellationToken cancellationToken = default);
-    Task CompleteAsync(CancellationToken cancellationToken = default);
 
 }

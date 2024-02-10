@@ -1,4 +1,5 @@
-﻿using Domain.Core.Errors;
+﻿using Application.Core.Data;
+using Domain.Core.Errors;
 using Domain.Core.Primitives.Result;
 using Domain.Core.ValueObjects;
 using Domain.Entities;
@@ -9,10 +10,12 @@ namespace Application.Services;
 public sealed class BattleService
 {
     private readonly IBattleRepository _battleRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public BattleService(IBattleRepository battleRepository)
+    public BattleService(IBattleRepository battleRepository, IUnitOfWork unitOfWork)
     {
         _battleRepository = battleRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Battle>> Create(string name, CancellationToken cancellationToken)
@@ -30,10 +33,10 @@ public sealed class BattleService
             return Result.Failure<Battle>(DomainErrors.Battle.DuplicateName);
         }
 
-        var battle = Battle.Create(nameResult.Value, DateTime.UtcNow);
+        var battle = Battle.Create(nameResult.Value);
 
         var createdBattle = await _battleRepository.InsertAsync(battle);
-        await _battleRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (createdBattle is null){
             return Result.Failure<Battle>(DomainErrors.Battle.UnableToAddBattle);
@@ -60,10 +63,9 @@ public sealed class BattleService
         }
 
         battle.ChangeName(nameResult.Value);
-        battle.ChangeModifiedOnUtc(DateTime.UtcNow);
         
         var updatedBattle = await _battleRepository.UpdateAsync(battle, id);
-        await _battleRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (updatedBattle is null){
             return Result.Failure<Battle>(DomainErrors.Battle.UnableToUpdateBattle);
@@ -74,7 +76,7 @@ public sealed class BattleService
 
     public async Task<Result<bool>> Delete(Guid id, CancellationToken cancellationToken){
         var result = await _battleRepository.DeleteAsync(id);
-        await _battleRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         if (!result)
         {
             return Result.Failure<bool>(DomainErrors.General.UnProcessableRequest);

@@ -1,4 +1,5 @@
-﻿using Domain.Core.Errors;
+﻿using Application.Core.Data;
+using Domain.Core.Errors;
 using Domain.Core.Primitives.Result;
 using Domain.Core.ValueObjects;
 using Domain.Entities;
@@ -9,10 +10,12 @@ namespace Application.Services;
 public sealed class HorseService
 {
     private readonly IHorseRepository _horseRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public HorseService(IHorseRepository horseRepository)
+    public HorseService(IHorseRepository horseRepository, IUnitOfWork unitOfWork)
     {
         _horseRepository = horseRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Horse>> Create(string name, CancellationToken cancellationToken)
@@ -29,10 +32,10 @@ public sealed class HorseService
         {
             return Result.Failure<Horse>(DomainErrors.Horse.DuplicateName);
         }
-         var horse = Horse.Create(nameResult.Value, DateTime.UtcNow);
+         var horse = Horse.Create(nameResult.Value);
 
         var createdHorse = await _horseRepository.InsertAsync(horse);
-        await _horseRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (createdHorse is null){
              return Result.Failure<Horse>(DomainErrors.Horse.UnableToAddHorse);
@@ -61,10 +64,9 @@ public sealed class HorseService
         }
 
         horse.ChangeName(nameResult.Value);
-        horse.ChangeModifiedOnUtc(DateTime.UtcNow);
         
         var updatedHorse = await _horseRepository.UpdateAsync(horse, id);
-        await _horseRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
          if (updatedHorse is null){
             return Result.Failure<Horse>(DomainErrors.Horse.UnableToUpdateHorse);
@@ -76,7 +78,7 @@ public sealed class HorseService
     public async Task<Result<bool>> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await _horseRepository.DeleteAsync(id);
-        await _horseRepository.CompleteAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (!result)
         {

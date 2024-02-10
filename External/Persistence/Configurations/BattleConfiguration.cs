@@ -12,6 +12,11 @@ internal class BattleConfiguration : IEntityTypeConfiguration<Battle>
     {
         builder.HasKey(c => c.Id);
 
+        // builder.Property(p => p.Name).HasConversion(
+        //     BattleName => BattleName.Value,
+        //     value => Name.Create(value).Value
+        // );
+
         builder.OwnsOne(battle => battle.Name, nameBuilder =>
         {
             nameBuilder.WithOwner();
