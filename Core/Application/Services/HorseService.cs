@@ -27,12 +27,13 @@ public sealed class HorseService
         {
             return Result.Failure<Horse>(firstFailureOrSuccess.Error);
         }
-        var isNameUnique = await _horseRepository.FindOneAsync(x => x.Name == nameResult.Value, cancellationToken);
-        if (isNameUnique is not null)
+        var newValue = nameResult.Value;
+        var isNameUnique = !await _horseRepository.AnyAsync(x => x.Name == newValue, cancellationToken);
+        if (!isNameUnique)
         {
             return Result.Failure<Horse>(DomainErrors.Horse.DuplicateName);
         }
-         var horse = Horse.Create(nameResult.Value);
+         var horse = Horse.Create(newValue);
 
         var createdHorse = await _horseRepository.InsertAsync(horse);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

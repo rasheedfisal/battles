@@ -27,13 +27,14 @@ public sealed class BattleService
         {
             return Result.Failure<Battle>(firstFailureOrSuccess.Error);
         }
-        var isNameUnique = await _battleRepository.FindOneAsync(x => x.Name == nameResult.Value, cancellationToken);
-        if (isNameUnique is not null)
+        var newValue = nameResult.Value;
+        var isNameUnique = !await _battleRepository.AnyAsync(x => x.Name == newValue, cancellationToken);
+        if (!isNameUnique)
         {
             return Result.Failure<Battle>(DomainErrors.Battle.DuplicateName);
         }
 
-        var battle = Battle.Create(nameResult.Value);
+        var battle = Battle.Create(newValue);
 
         var createdBattle = await _battleRepository.InsertAsync(battle);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

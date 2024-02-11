@@ -18,6 +18,8 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
 
     public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> match, CancellationToken cancellationToken = default)
     {
+        // bool IsSatisfiedBy(T entity) => match.Compile()(entity);
+        
         return await _context.Set<T>().AnyAsync(match, cancellationToken);
     }
 

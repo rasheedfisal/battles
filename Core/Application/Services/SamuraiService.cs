@@ -27,14 +27,14 @@ public sealed class SamuraiService
         {
             return Result.Failure<Samurai>(firstFailureOrSuccess.Error);
         }
-
-        var isNameUnique = await _samuraiRepository.FindOneAsync(x => x.Name == nameResult.Value, cancellationToken);
-        if (isNameUnique is not null)
+        var newValue = nameResult.Value;
+        var isNameUnique = !await _samuraiRepository.AnyAsync(x => x.Name == nameResult.Value, cancellationToken);
+        if (!isNameUnique)
         {
             return Result.Failure<Samurai>(DomainErrors.Samurai.DuplicateName);
         }
 
-       var samurai = Samurai.Create(nameResult.Value);
+       var samurai = Samurai.Create(newValue);
 
         var createdSamurai = await _samuraiRepository.InsertAsync(samurai);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
