@@ -12,13 +12,12 @@ logger.Debug("init main");
 
 try
 {
-
     var builder = WebApplication.CreateBuilder(args);
 
     // NLog: Setup NLog for Dependency injection
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
-
+    
     // Add services to the container.
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
@@ -55,6 +54,7 @@ try
 catch(Exception ex)
 {
     logger.Error(ex);
+    throw;
 }
 finally
 {

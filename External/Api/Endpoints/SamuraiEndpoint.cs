@@ -11,7 +11,7 @@ public class SamuraiEndpoint: ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("api/samurai");
-
+        
         group.MapPost("", CreateSamurai);
         group.MapPut("{id}", UpdateSamurai);
         group.MapDelete("", DeleteSamurai);
