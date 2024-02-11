@@ -12,18 +12,30 @@ internal class HorseConfiguration : IEntityTypeConfiguration<Horse>
     {
         builder.HasKey(c => c.Id);
 
-         builder.OwnsOne(horse => horse.Name, nameBuilder =>
-        {
-            nameBuilder.WithOwner();
+        builder.Property(p => p.Name)
+        .HasConversion(
+            HorseName => HorseName.Value,
+            value => Name.Create(value).Value
+        )
+        .HasColumnName(nameof(Horse.Name))
+        .HasMaxLength(Name.MaxLength)
+        .IsRequired();
 
-            nameBuilder.Property(name => name.Value)
-                .HasColumnName(nameof(Horse.Name))
-                .HasMaxLength(Name.MaxLength)
-                .IsRequired();
-        });
+        // builder.OwnsOne(horse => horse.Name, nameBuilder =>
+        // {
+        //     nameBuilder.WithOwner();
+
+        //     nameBuilder.Property(name => name.Value)
+        //         .HasColumnName(nameof(Horse.Name))
+        //         .HasMaxLength(Name.MaxLength)
+        //         .IsRequired();
+        // });
 
         builder.Property(c => c.CreatedOnUtc)
             .IsRequired();
+        builder.Property(user => user.ModifiedOnUtc);
+
+        builder.Property(user => user.DeletedOnUtc);
 
         builder.HasIndex(c => c.Name).IsUnique();
     }

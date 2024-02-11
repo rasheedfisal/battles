@@ -9,9 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services
+    .AddDB(builder)
     .AddServices()
-    .AddPersistence()
-    .AddDB(builder);
+    .AddPersistence();
 
 var app = builder.Build();
 

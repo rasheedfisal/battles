@@ -28,8 +28,8 @@ public sealed class SamuraiService
             return Result.Failure<Samurai>(firstFailureOrSuccess.Error);
         }
 
-         bool isNameUnique = await _samuraiRepository.AnyAsync(x => x.Name.Value == nameResult.Value, cancellationToken);
-        if (!isNameUnique)
+        var isNameUnique = await _samuraiRepository.FindOneAsync(x => x.Name == nameResult.Value, cancellationToken);
+        if (isNameUnique is not null)
         {
             return Result.Failure<Samurai>(DomainErrors.Samurai.DuplicateName);
         }

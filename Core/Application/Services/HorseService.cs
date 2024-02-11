@@ -27,8 +27,8 @@ public sealed class HorseService
         {
             return Result.Failure<Horse>(firstFailureOrSuccess.Error);
         }
-        bool isNameUnique = await _horseRepository.AnyAsync(x => x.Name.Value == nameResult.Value, cancellationToken);
-        if (!isNameUnique)
+        var isNameUnique = await _horseRepository.FindOneAsync(x => x.Name == nameResult.Value, cancellationToken);
+        if (isNameUnique is not null)
         {
             return Result.Failure<Horse>(DomainErrors.Horse.DuplicateName);
         }

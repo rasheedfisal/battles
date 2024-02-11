@@ -27,8 +27,8 @@ public sealed class BattleService
         {
             return Result.Failure<Battle>(firstFailureOrSuccess.Error);
         }
-        bool isNameUnique = await _battleRepository.AnyAsync(x => x.Name.Value == nameResult.Value, cancellationToken);
-        if (!isNameUnique)
+        var isNameUnique = await _battleRepository.FindOneAsync(x => x.Name == nameResult.Value, cancellationToken);
+        if (isNameUnique is not null)
         {
             return Result.Failure<Battle>(DomainErrors.Battle.DuplicateName);
         }

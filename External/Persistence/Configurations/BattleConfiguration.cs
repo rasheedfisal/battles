@@ -12,23 +12,32 @@ internal class BattleConfiguration : IEntityTypeConfiguration<Battle>
     {
         builder.HasKey(c => c.Id);
 
-        // builder.Property(p => p.Name).HasConversion(
-        //     BattleName => BattleName.Value,
-        //     value => Name.Create(value).Value
-        // );
+        builder.Property(p => p.Name)
+        .HasConversion(
+            BattleName => BattleName.Value,
+            value => Name.Create(value).Value
+        )
+        .HasColumnName(nameof(Battle.Name))
+        .HasMaxLength(Name.MaxLength)
+        .IsRequired();
 
-        builder.OwnsOne(battle => battle.Name, nameBuilder =>
-        {
-            nameBuilder.WithOwner();
+        // builder.OwnsOne(battle => battle.Name, nameBuilder =>
+        // {
+        //     nameBuilder.WithOwner();
 
-            nameBuilder.Property(name => name.Value)
-                .HasColumnName(nameof(Battle.Name))
-                .HasMaxLength(Name.MaxLength)
-                .IsRequired();
-        });
+        //     nameBuilder.Property(name => name.Value)
+        //         .HasColumnName(nameof(Battle.Name))
+        //         .HasMaxLength(Name.MaxLength)
+        //         .IsRequired();
+                
+        // });
 
         builder.Property(c => c.CreatedOnUtc)
             .IsRequired();
+        
+        builder.Property(user => user.ModifiedOnUtc);
+
+        builder.Property(user => user.DeletedOnUtc);
 
         builder.HasIndex(c => c.Name).IsUnique();
 

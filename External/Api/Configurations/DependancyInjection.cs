@@ -1,7 +1,10 @@
-﻿using Application.Queries;
+﻿using Application.Core.Common;
+using Application.Core.Data;
+using Application.Queries;
 using Application.Services;
 using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Common;
 using Persistence.Database;
 using Persistence.Queries;
 using Persistence.Repositories;
@@ -23,6 +26,7 @@ public static class DependancyInjection
         services.AddScoped<ISamuraiRepository, SamuraiRepository>();
         services.AddScoped<IHorseRepository, HorseRepository>();
         services.AddScoped<IGetBattleByIdQueryHandler, GetBattleByIdQueryHandler>();
+        services.AddTransient<IDateTime, MachineDateTime>();
         return services;
     }
     public static IServiceCollection AddDB(this IServiceCollection services, WebApplicationBuilder builder)
@@ -32,6 +36,8 @@ public static class DependancyInjection
             var connectionString = builder.Configuration.GetConnectionString("DB_Conn");
                 opt.UseSqlServer(connectionString);
         });
+
+        services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<ApplicationDbContext>());
         // services.AddDbContext<ApplicationDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
         return services;
     }
