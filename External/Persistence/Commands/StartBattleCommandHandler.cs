@@ -66,7 +66,7 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
         
         if (resultSamurais.Count == 0)
         {
-            Result.Failure<Lazy<BattleDetail>>(DomainErrors.General.NotFound);
+            Result.Failure<BattleDetail>(DomainErrors.General.NotFound);
         }
         var allSamurais = resultSamurais;
 
@@ -76,7 +76,7 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
                             .ToListAsync(cancellationToken);
         if (resultHorses.Count == 0)
         {
-            Result.Failure<Lazy<BattleDetail>>(DomainErrors.General.NotFound);
+            Result.Failure<BattleDetail>(DomainErrors.General.NotFound);
         }
 
         var allHorses = resultHorses;
@@ -119,7 +119,7 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
 
         if (battleDetails.Count == 0)
         {
-            Result.Failure<Lazy<BattleDetail>>(DomainErrors.BattleDetails.AllHorsesFoughtWithGivenSamurais);
+            Result.Failure<BattleDetail>(DomainErrors.BattleDetails.AllHorsesFoughtWithGivenSamurais);
         }
         
         return Result.Success(battleDetails);
