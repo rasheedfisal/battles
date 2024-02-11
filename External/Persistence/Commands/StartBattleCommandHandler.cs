@@ -116,6 +116,11 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
             //     }
             // }
         }
+
+        if (battleDetails.Count == 0)
+        {
+            Result.Failure<Lazy<BattleDetail>>(DomainErrors.BattleDetails.AllHorsesFoughtWithGivenSamurais);
+        }
         
         return Result.Success(battleDetails);
     }

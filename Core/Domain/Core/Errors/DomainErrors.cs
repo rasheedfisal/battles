@@ -36,6 +36,7 @@ public static class DomainErrors
         public static Error BattleAlreadyEnded => new("BattleDetails.BattleAlreadyEnded", "The specified battle already Ended.");
         public static Error UnableToStartBattle => new("BattleDetails.UnableToStartBattle", "Cannot start battle.");
         public static Error UnableToEndBattle => new("BattleDetails.UnableToEndBattle", "Cannot end battle.");
+        public static Error AllHorsesFoughtWithGivenSamurais => new("BattleDetails.AllHorsesFoughtWithGivenSamurais", "All horses fought with their respected samurais before, please add new horses.");
     
     }
 
