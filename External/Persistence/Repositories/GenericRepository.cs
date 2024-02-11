@@ -21,14 +21,9 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
         return await _context.Set<T>().AnyAsync(match, cancellationToken);
     }
 
-    public async Task CompleteAsync(CancellationToken cancellationToken = default)
-    {
-       await _context.SaveChangesAsync(cancellationToken);
-    }
-
     public virtual async Task<bool> DeleteAsync(Guid Key)
     {
-        // hard delete
+        // soft delete
         var entity = await dbset.FindAsync(Key);
         if (entity is not null)
         {
@@ -75,6 +70,6 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
             _context.Entry(existing).CurrentValues.SetValues(entity);
         }
 
-        return entity;
+        return existing;
     }
 }
