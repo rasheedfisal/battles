@@ -34,7 +34,9 @@ internal class BattleDetailConfiguration : IEntityTypeConfiguration<BattleDetail
         builder.Property(c => c.HorseRideEndDate)
             .HasDefaultValue(null);
 
-        builder.HasIndex(p => new{ p.BattleId, p.SamuraiId, p.HorseId })
+        // builder.HasIndex(p => new{ p.BattleId, p.SamuraiId, p.HorseId })
+        //     .IsUnique();
+         builder.HasIndex(p => new{ p.SamuraiId, p.HorseId })
             .IsUnique();
     }
 }

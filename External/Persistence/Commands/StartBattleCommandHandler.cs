@@ -44,7 +44,7 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
 
         if (getItems.IsFailure)
         {
-            return Result.Failure<bool>(DomainErrors.BattleDetails.UnableToStartBattle);
+            return Result.Failure<bool>(getItems.Error);
         }
 
         _context.BattleDetails.BulkInsertOptimized(getItems.Value);
@@ -66,7 +66,7 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
         
         if (resultSamurais.Count == 0)
         {
-            Result.Failure<BattleDetail>(DomainErrors.General.NotFound);
+            return Result.Failure<List<BattleDetail>>(DomainErrors.General.NotFound);
         }
         var allSamurais = resultSamurais;
 
@@ -76,29 +76,27 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
                             .ToListAsync(cancellationToken);
         if (resultHorses.Count == 0)
         {
-            Result.Failure<BattleDetail>(DomainErrors.General.NotFound);
+            return Result.Failure<List<BattleDetail>>(DomainErrors.General.NotFound);
         }
 
-        var allHorses = resultHorses;
 
         foreach (var samurai in allSamurais)
         {
+            var allHorses = resultHorses;
             
-            foreach (var horse in allHorses)
+            for (int i = allHorses.Count - 1; i >= 0; i--)
             {
                 var isUniqueBattleSamuraiHorse = !await _context.BattleDetails
                                                 .AsNoTracking()
-                                                .AnyAsync(x => x.BattleId == battleId && x.SamuraiId == samurai.Id && x.HorseId == horse.Id, cancellationToken);
+                                                .AnyAsync(x => x.SamuraiId == samurai.Id && x.HorseId == allHorses[i].Id, cancellationToken);
 
                 if (isUniqueBattleSamuraiHorse)
                 {
-                    var newDetails = BattleDetail.Create(battleId, samurai.Id, horse.Id, DateTime.UtcNow);
+                    var newDetails = BattleDetail.Create(battleId, samurai.Id, allHorses[i].Id, DateTime.UtcNow);
                     battleDetails.Add(newDetails);
                     break;
                 }else {
-                    int tmp = allHorses.IndexOf(horse);
-                    allHorses.Add(horse);
-                    allHorses.RemoveAt(tmp);
+                    allHorses.RemoveAt(i);
                 }
             }
             // try
@@ -119,7 +117,7 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
 
         if (battleDetails.Count == 0)
         {
-            Result.Failure<BattleDetail>(DomainErrors.BattleDetails.AllHorsesFoughtWithGivenSamurais);
+            return Result.Failure<List<BattleDetail>>(DomainErrors.BattleDetails.AllHorsesFoughtWithGivenSamurais);
         }
         
         return Result.Success(battleDetails);
