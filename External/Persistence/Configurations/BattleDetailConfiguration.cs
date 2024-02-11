@@ -12,18 +12,18 @@ internal class BattleDetailConfiguration : IEntityTypeConfiguration<BattleDetail
     {
         builder.HasKey(c => c.Id);
 
-        builder.HasOne<Battle>()
+        builder.HasOne(x => x.Battle)
             .WithMany()
             .HasForeignKey(b => b.BattleId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne<Samurai>()
+        builder.HasOne(x => x.Samurai)
             .WithMany()
             .HasForeignKey(b => b.SamuraiId)
             .IsRequired();
 
-        builder.HasOne<Horse>()
+        builder.HasOne(x => x.Horse)
             .WithMany()
             .HasForeignKey(b => b.HorseId)
             .IsRequired();
@@ -31,8 +31,10 @@ internal class BattleDetailConfiguration : IEntityTypeConfiguration<BattleDetail
         builder.Property(c => c.HorseRideStartDate)
             .IsRequired();
 
-        builder.Property(c => c.HorseRideEndDate);
+        builder.Property(c => c.HorseRideEndDate)
+            .HasDefaultValue(null);
 
-        builder.HasIndex(p => new{ p.BattleId, p.SamuraiId, p.HorseId });
+        builder.HasIndex(p => new{ p.BattleId, p.SamuraiId, p.HorseId })
+            .IsUnique();
     }
 }

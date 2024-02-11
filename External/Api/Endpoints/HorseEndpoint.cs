@@ -14,7 +14,7 @@ public class HorseEndpoint: ICarterModule
         group.MapPost("", CreateHorse);
         group.MapPut("{id}", UpdateHorse);
         group.MapDelete("", DeleteHorse);
-        group.MapGet("{id}", GetHorse).WithName("GetHorseByID");
+        group.MapGet("{id}", GetHorse).WithName(nameof(GetHorse));
         group.MapGet("", GetAllHorses);
     }
    
@@ -27,7 +27,7 @@ public class HorseEndpoint: ICarterModule
             logger.LogError("Error accured: {code}: {message}", result.Error.Code, result.Error.Message);
             return result.ToProblemDetails();
         }
-        return Results.CreatedAtRoute("GetHorseByID", new { result.Value.Id }, result.Value);
+        return Results.CreatedAtRoute(nameof(GetHorse), new { result.Value.Id }, result.Value);
     }
 
     private static async Task<IResult> UpdateHorse(Guid id, UpsertDto request, ILogger<HorseEndpoint> logger, HorseService service, CancellationToken cancellationToken)

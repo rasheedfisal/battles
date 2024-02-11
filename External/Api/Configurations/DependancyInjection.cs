@@ -1,9 +1,11 @@
-﻿using Application.Core.Common;
+﻿using Application.Commands;
+using Application.Core.Common;
 using Application.Core.Data;
 using Application.Queries;
 using Application.Services;
 using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Commands;
 using Persistence.Common;
 using Persistence.Database;
 using Persistence.Queries;
@@ -25,7 +27,9 @@ public static class DependancyInjection
         services.AddScoped<IBattleRepository, BattleRepository>();
         services.AddScoped<ISamuraiRepository, SamuraiRepository>();
         services.AddScoped<IHorseRepository, HorseRepository>();
-        services.AddScoped<IGetBattleByIdQueryHandler, GetBattleByIdQueryHandler>();
+        services.AddScoped<IGetAllBattleResultsQueryHandler, GetAllBattleResultsQueryHandler>();
+        services.AddScoped<IStartBattleCommandHandler, StartBattleCommandHandler>();
+        services.AddScoped<IEndBattleCommandHandler, EndBattleCommandHandler>();
         services.AddTransient<IDateTime, MachineDateTime>();
         return services;
     }

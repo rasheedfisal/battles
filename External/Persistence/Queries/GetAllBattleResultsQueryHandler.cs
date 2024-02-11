@@ -39,8 +39,8 @@ public class GetAllBattleResultsQueryHandler : IGetAllBattleResultsQueryHandler
                         SamuraiHorses = samuraiHorses.Select(x =>
                             new SamuraiHorseResponse
                             {
-                                Horse = x.Horse,
-                                Samurai = x.Samurai
+                                Horse = x.Horse!,
+                                Samurai = x.Samurai!
                             }
                         ).ToList()
                     };

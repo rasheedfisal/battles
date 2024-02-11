@@ -15,7 +15,7 @@ public class SamuraiEndpoint: ICarterModule
         group.MapPost("", CreateSamurai);
         group.MapPut("{id}", UpdateSamurai);
         group.MapDelete("", DeleteSamurai);
-        group.MapGet("{id}", GetSamurai).WithName("GetSamuraiByID");
+        group.MapGet("{id}", GetSamurai).WithName(nameof(GetSamurai));
         group.MapGet("", GetAllSamurais);
     }
    
@@ -28,7 +28,7 @@ public class SamuraiEndpoint: ICarterModule
             logger.LogError("Error accured: {code}: {message}", result.Error.Code, result.Error.Message);
             return result.ToProblemDetails();
         }
-        return Results.CreatedAtRoute("GetSamuraiByID", new { result.Value.Id }, result.Value);
+        return Results.CreatedAtRoute(nameof(GetSamurai), new { result.Value.Id }, result.Value);
      }
      private static async Task<IResult> UpdateSamurai(Guid id, UpsertDto request, ILogger<SamuraiEndpoint> logger, SamuraiService service, CancellationToken cancellationToken)
      {

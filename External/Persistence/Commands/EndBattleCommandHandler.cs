@@ -47,13 +47,6 @@ public class EndBattleCommandHandler : IEndBattleCommandHandler
             return Result.Failure<bool>(DomainErrors.BattleDetails.BattleAlreadyEnded);
         }
 
-        var getItems = await GenerateBattleItems(battleId, cancellationToken);
-
-        if (getItems.IsFailure)
-        {
-            return Result.Failure<bool>(DomainErrors.BattleDetails.UnableToStartBattle);
-        }
-
         await _context.BattleDetails.ExecuteUpdateAsync(
             s => s.SetProperty(
                 p => p.HorseRideEndDate,
@@ -65,66 +58,5 @@ public class EndBattleCommandHandler : IEndBattleCommandHandler
         // await _context.BulkSaveChangesAsync(cancellationToken);
 
         return Result.Success(true);
-    }
-
-    private async Task<Result<List<BattleDetail>>> GenerateBattleItems(Guid battleId, CancellationToken cancellationToken) 
-    {
-
-       var battleDetails = new List<BattleDetail>();
-        var allSamurais = await _context
-                        .Samurais
-                        .AsNoTracking()
-                        .ToListAsync(cancellationToken);
-        if (allSamurais.Count == 0)
-        {
-            Result.Failure<Lazy<BattleDetail>>(DomainErrors.General.NotFound);
-        }
-
-        var allHorses = await _context
-                            .Horses
-                            .AsNoTracking()
-                            .ToListAsync(cancellationToken);
-        if (allHorses.Count == 0)
-        {
-            Result.Failure<Lazy<BattleDetail>>(DomainErrors.General.NotFound);
-        }
-
-        foreach (var samurai in allSamurais)
-        {
-            
-            foreach (var horse in allHorses)
-            {
-                var isUniqueBattleSamuraiHorse = !await _context.BattleDetails
-                                                .AsNoTracking()
-                                                .AnyAsync(x => x.BattleId == battleId && x.SamuraiId == samurai.Id && x.HorseId == horse.Id, cancellationToken);
-
-                if (isUniqueBattleSamuraiHorse)
-                {
-                    var newDetails = BattleDetail.Create(battleId, samurai.Id, horse.Id, DateTime.UtcNow);
-                    battleDetails.Add(newDetails);
-                    break;
-                }else {
-                    int tmp = allHorses.IndexOf(horse);
-                    allHorses.Add(horse);
-                    allHorses.RemoveAt(tmp);
-                }
-            }
-            // try
-            // {
-            // }
-            // catch (DbUpdateException ex)
-            // {
-            //     if (ex.InnerException?.InnerException is SqlException innerException && (innerException.Number == 2627 || innerException.Number == 2601))
-            //     {
-                    
-            //     }
-            //     else
-            //     {
-            //         Result.Failure<List<BattleDetail>>(DomainErrors.General.ServerError);
-            //     }
-            // }
-        }
-        
-        return Result.Success(battleDetails);
     }
 }

@@ -58,23 +58,28 @@ public class StartBattleCommandHandler : IStartBattleCommandHandler
     {
 
        var battleDetails = new List<BattleDetail>();
-        var allSamurais = await _context
+        var resultSamurais = await _context
                         .Samurais
+                        .Where(x => x.DeletedOnUtc == null)
                         .AsNoTracking()
                         .ToListAsync(cancellationToken);
-        if (allSamurais.Count == 0)
+        
+        if (resultSamurais.Count == 0)
+        {
+            Result.Failure<Lazy<BattleDetail>>(DomainErrors.General.NotFound);
+        }
+        var allSamurais = resultSamurais;
+
+        var resultHorses = await _context
+                            .Horses
+                            .AsNoTracking()
+                            .ToListAsync(cancellationToken);
+        if (resultHorses.Count == 0)
         {
             Result.Failure<Lazy<BattleDetail>>(DomainErrors.General.NotFound);
         }
 
-        var allHorses = await _context
-                            .Horses
-                            .AsNoTracking()
-                            .ToListAsync(cancellationToken);
-        if (allHorses.Count == 0)
-        {
-            Result.Failure<Lazy<BattleDetail>>(DomainErrors.General.NotFound);
-        }
+        var allHorses = resultHorses;
 
         foreach (var samurai in allSamurais)
         {
