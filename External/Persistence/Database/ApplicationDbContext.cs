@@ -26,6 +26,7 @@ public class ApplicationDbContext: DbContext, IUnitOfWork
     public DbSet<Battle> Battles {get; set;}
     public DbSet<Samurai> Samurais {get; set;}
     public DbSet<Horse> Horses {get; set;}
+    public DbSet<BattleDetail> BattleDetails {get; set;}
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

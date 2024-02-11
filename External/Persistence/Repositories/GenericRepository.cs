@@ -20,7 +20,8 @@ public abstract class GenericRepository<T> : IGenericRepository<T> where T : cla
     {
         // bool IsSatisfiedBy(T entity) => match.Compile()(entity);
         
-        return await _context.Set<T>().AnyAsync(match, cancellationToken);
+        // return await _context.Set<T>().AnyAsync(match, cancellationToken);
+        return await dbset.AsNoTracking().AnyAsync(match, cancellationToken);
     }
 
     public virtual async Task<bool> DeleteAsync(Guid Key)
